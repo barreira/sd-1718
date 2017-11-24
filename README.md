@@ -7,4 +7,4 @@ Mestrado Integrado em Eng. Informática - 3.º ano - Universidade do Minho
 
 * Ana Paula Carvalho (@aplealcarvalho)
 * João Pires Barreira (@jpiresbarreira)
-* 
+* Rafael Braga (@rafaelbraga25)
