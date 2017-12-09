@@ -1,3 +1,5 @@
+package server;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,7 +11,7 @@ public class Server {
 
         while (true) {
             Socket cs = ss.accept();
-            ConnectionHandlerEcho ch =  new ConnectionHandlerEcho(cs);
+            ConnectionHandler ch =  new ConnectionHandler(cs);
             ch.start();
         }
     }
