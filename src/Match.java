@@ -1,5 +1,3 @@
-package server;
-
 public class Match {
 
     private Team team1;
