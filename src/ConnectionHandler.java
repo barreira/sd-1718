@@ -7,11 +7,13 @@ import java.net.Socket;
 public class ConnectionHandler extends Thread {
 
     private Socket socket;
-    private Overwatch overwatch;
+    private OverwatchImpl overwatch;
+    private String fileName;
 
-    public ConnectionHandler(Socket socket, Overwatch overwatch) {
+    public ConnectionHandler(Socket socket, OverwatchImpl overwatch, String fileName) {
         this.socket = socket;
         this.overwatch = overwatch;
+        this.fileName = fileName;
     }
 
     public void run() {
@@ -53,6 +55,7 @@ public class ConnectionHandler extends Thread {
             }
 
             socket.close();
+            overwatch.saveObject(fileName);
         }
         catch (IOException e) {
             e.printStackTrace();
