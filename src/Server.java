@@ -11,7 +11,7 @@ public class Server {
     public static void main(String[] args) throws IOException {
 
         ServerSocket ss = new ServerSocket(2222);
-        OverwatchImpl overwatch = Server.initApp();
+        OverwatchSkeleton overwatch = Server.initApp();
 
         while (true) {
             Socket cs = ss.accept();
@@ -20,17 +20,17 @@ public class Server {
         }
     }
 
-    private static OverwatchImpl initApp() {
+    private static OverwatchSkeleton initApp() {
 
-        OverwatchImpl overwatch = null;
+        OverwatchSkeleton overwatch = null;
 
         try {
             ObjectInputStream oin = new ObjectInputStream(new FileInputStream(FILE));
-            overwatch = (OverwatchImpl) oin.readObject();
+            overwatch = (OverwatchSkeleton) oin.readObject();
             oin.close();
         }
         catch (Exception e) {
-            overwatch = new OverwatchImpl();
+            overwatch = new OverwatchSkeleton();
         }
 
         return overwatch;

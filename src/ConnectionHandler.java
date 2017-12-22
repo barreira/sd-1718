@@ -3,17 +3,31 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class ConnectionHandler extends Thread {
 
     private Socket socket;
-    private OverwatchImpl overwatch;
+    private OverwatchSkeleton overwatch;
     private String fileName;
 
-    public ConnectionHandler(Socket socket, OverwatchImpl overwatch, String fileName) {
+    private Matches matches;
+    private Players players;
+    private AvailablePlayers availablePlayers;
+    private Connections connections;
+    private Player player;
+
+    private final ReentrantLock locker;
+    private Condition hasMatch;
+
+    public ConnectionHandler(Socket socket, OverwatchSkeleton overwatch, String fileName) {
         this.socket = socket;
         this.overwatch = overwatch;
         this.fileName = fileName;
+
+        locker = new ReentrantLock();
+        hasMatch = locker.newCondition();
     }
 
     public void run() {
@@ -59,6 +73,22 @@ public class ConnectionHandler extends Thread {
         }
         catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public Player signUp(String username, String password) throws InvalidAccountException {
+
+    }
+
+    public Player login(String username, String password) throws InvalidAccountException {
+
+    }
+
+    public Match play() throws InterruptedException {
+        availablePlayers.addPlayer(player);
+
+        while (!matches.isPlaying(player.getUsername())) {
+            hasMatch.await();
         }
     }
 }
