@@ -6,7 +6,7 @@ public class Client {
 
         OverwatchStub overwatch = new OverwatchStub("localhost", 2222);
 
-        //Player p = overwatch.signUp("abc", "123");
+        //Player p = overwatch.signup("abc", "123");
 
         Player p = overwatch.login("abc", "123");
 

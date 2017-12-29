@@ -1,11 +1,11 @@
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class AvailablePlayers {
 
     private Map<Integer, PlayerQueue> availablePlayers;
-    private final ReentrantLock locker;
-
+    private final Lock locker;
     private static final int NUM_PLAYERS = 4;
 
     public AvailablePlayers() {
@@ -17,89 +17,90 @@ public class AvailablePlayers {
         }
     }
 
-    public void addPlayer(Player p) {
+    public void addPlayer(Player player) throws InterruptedException {
         PlayerQueue queue, queueS, queueI;
 
         locker.lock();
 
         try {
-            int rank = p.getRanking();
+            int rank = player.getRanking();
 
             queue = availablePlayers.get(rank);
             queueS = availablePlayers.get(rank + 1);
             queueI = availablePlayers.get(rank - 1);
 
-            queue.locker.lock();
-            queue.insertPlayer(p);
-
-            if (queueS != null) {
-                queueS.locker.lock();
-            }
-
-            if (queueI != null) {
-                queueI.locker.lock();
-            }
-        } finally {
+            queue.locker.lock(); // este lock adquire o lock da PlayerQueue do rank em questão? isto é, se entretanto chegar um gajo com o mesmo rank, vai ter ficar à espera para obter as queues?
+            queueS.locker.lock();
+            queueI.locker.lock();
+        }
+        finally {
             locker.unlock();
         }
 
         try {
+            queue.insertPlayer(player);
+
+            while (queue.size() < NUM_PLAYERS && queue.size() + queueI.size() < NUM_PLAYERS
+                                              && queue.size() + queueS.size() < NUM_PLAYERS) {
+                player.hasMatch.await();
+            }
+
+            List<Player> playersInMatch;
+
             if (queue.size() >= NUM_PLAYERS) {
-                this.clearQueue(queue);
-            } else if (queueI != null && (queue.size() + queueI.size() >= NUM_PLAYERS)) {
-                this.clearQueue(queue, queueI);
-            } else if (queueS != null && (queue.size() + queueS.size() >= NUM_PLAYERS)) {
-                this.clearQueue(queue, queueS);
+                playersInMatch = this.clearQueue(queue);
             }
-        } finally {
-            queue.locker.unlock();
-
-            if (queueS != null) {
-                queueS.locker.unlock();
+            else if (queue.size() + queueI.size() >= NUM_PLAYERS) {
+                playersInMatch = this.clearQueue(queue, queueI);
+            }
+            else if (queue.size() + queueS.size() >= NUM_PLAYERS) {
+                playersInMatch = this.clearQueue(queue, queueS);
             }
 
-            if (queueI != null) {
-                queueI.locker.unlock();
-            }
+            // dividir jogadores do jogo pelas duas equipas assegurando equilíbrio de ranks
+            // criar dois objetos Team
+            // com esses dois objetos, criar Match
+            // devolver Match
+            // (falta acordar restantes jogadores)
+        }
+        finally {
+            locker.unlock();
         }
     }
 
-    private void clearQueue(PlayerQueue queue) {
-        List<Player> players = queue.clearQueue(NUM_PLAYERS);
-
-
+    private List<Player> clearQueue(PlayerQueue queue) {
+        return queue.clearQueue(NUM_PLAYERS);
     }
 
-    private void clearQueue(PlayerQueue queue1, PlayerQueue queue2) {
+    private List<Player> clearQueue(PlayerQueue queue1, PlayerQueue queue2) {
         int s1 = queue1.size();
         int r = NUM_PLAYERS - s1;
 
         List<Player> players = queue1.clearQueue(s1);
         players.addAll(queue2.clearQueue(r));
 
-
+        return players;
     }
-
 
     private class PlayerQueue {
 
         private List<Player> players;
         final ReentrantLock locker;
 
-        public PlayerQueue() {
+        private PlayerQueue() {
             players = new ArrayList<>();
             locker = new ReentrantLock();
         }
 
-        public void insertPlayer(Player p) {
+        private void insertPlayer(Player p) {
             players.add(p);
         }
 
-        public int size() {
+        private int size() {
             return players.size();
         }
 
-        public List<Player> clearQueue(int count) {
+        private List<Player> clearQueue(int count) {
             Iterator it = players.iterator();
             List<Player> list = new ArrayList<>();
             int i = 0;

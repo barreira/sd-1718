@@ -3,31 +3,19 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class ConnectionHandler extends Thread {
 
     private Socket socket;
-    private OverwatchSkeleton overwatch;
-    private String fileName;
-
-    private Matches matches;
-    private Players players;
-    private AvailablePlayers availablePlayers;
-    private Connections connections;
+    private OverwatchImpl overwatch;
     private Player player;
+//    private Connections connections;
+//    private String fileName;
 
-    private final ReentrantLock locker;
-    private Condition hasMatch;
-
-    public ConnectionHandler(Socket socket, OverwatchSkeleton overwatch, String fileName) {
+    public ConnectionHandler(Socket socket, OverwatchImpl overwatch, String fileName) {
         this.socket = socket;
         this.overwatch = overwatch;
-        this.fileName = fileName;
-
-        locker = new ReentrantLock();
-        hasMatch = locker.newCondition();
+//        this.fileName = fileName;
     }
 
     public void run() {
@@ -45,7 +33,7 @@ public class ConnectionHandler extends Thread {
 
                 if (parts[0].equals("signup")) {
                     try {
-                        overwatch.signUp(parts[1], parts[2]);
+                        overwatch.signup(parts[1], parts[2]);
 
                         response = "OK";
                     }
@@ -55,12 +43,20 @@ public class ConnectionHandler extends Thread {
                 }
                 else if (parts[0].equals("login")) {
                     try {
-                        Player p = overwatch.login(parts[1], parts[2]);
+                        player = overwatch.login(parts[1], parts[2]);
 
-                        response = "OK:" + p.getRanking() + ":" + p.getVictories();
+                        response = "OK:" + player.getRanking() + ":" + player.getVictories();
                     }
                     catch (InvalidAccountException e) {
                         response = "ERROR";
+                    }
+                }
+                else if (parts[0].equals("play")) {
+                    try {
+                        overwatch.play(player);
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
 
@@ -69,26 +65,10 @@ public class ConnectionHandler extends Thread {
             }
 
             socket.close();
-            overwatch.saveObject(fileName);
+//            overwatch.saveObject(fileName);
         }
         catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    public Player signUp(String username, String password) throws InvalidAccountException {
-
-    }
-
-    public Player login(String username, String password) throws InvalidAccountException {
-
-    }
-
-    public Match play() throws InterruptedException {
-        availablePlayers.addPlayer(player);
-
-        while (!matches.isPlaying(player.getUsername())) {
-            hasMatch.await();
         }
     }
 }

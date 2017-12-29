@@ -1,4 +1,7 @@
 import java.io.Serializable;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Player implements Serializable {
 
@@ -7,6 +10,9 @@ public class Player implements Serializable {
     private int ranking;
     private int victories;
 
+    final Lock locker;
+    Condition hasMatch;
+
     /* Construtores */
 
     public Player(String username, String password) {
@@ -14,6 +20,8 @@ public class Player implements Serializable {
         this.password = password;
         ranking = 0;
         victories = 0;
+        locker = new ReentrantLock();
+        hasMatch = locker.newCondition();
     }
 
     public Player(String username, String password, int ranking, int victories) {
@@ -21,6 +29,8 @@ public class Player implements Serializable {
         this.password = password;
         this.ranking = ranking;
         this.victories = victories;
+        locker = new ReentrantLock();
+        hasMatch = locker.newCondition();
     }
 
     /* Getters */
