@@ -23,13 +23,11 @@ public class OverwatchImpl implements Overwatch {
         player.locker.lock();
 
         try {
-            availablePlayers.addPlayer(player);
+            return availablePlayers.addPlayer(player);
 
 //            while (!matches.isPlaying(player.getUsername())) {
 //                player.notInMatch.await();
 //            }
-
-            return null;
         }
         finally {
             player.locker.unlock();

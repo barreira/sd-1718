@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.List;
 
 public class ConnectionHandler extends Thread {
 
@@ -53,10 +54,12 @@ public class ConnectionHandler extends Thread {
                 }
                 else if (parts[0].equals("play")) {
                     try {
-                        overwatch.play(player);
+                        Match match = overwatch.play(player);
+
+                        response = "OK:" + match.toString();
                     }
                     catch (InterruptedException e) {
-                        e.printStackTrace();
+                        response = "ERROR";
                     }
                 }
 

@@ -11,4 +11,8 @@ public class Team {
     public Team(List<Player> players) {
         this.players = players;
     }
+
+    public List<Player> getPlayers() {
+        return players;
+    }
 }

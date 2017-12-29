@@ -5,6 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class AvailablePlayers {
 
     private Map<Integer, PlayerQueue> availablePlayers;
+
     private final Lock locker;
     private static final int NUM_PLAYERS = 4;
 
@@ -17,7 +18,7 @@ public class AvailablePlayers {
         }
     }
 
-    public void addPlayer(Player player) throws InterruptedException {
+    public Match addPlayer(Player player) throws InterruptedException {
         PlayerQueue queue, queueS, queueI;
 
         locker.lock();
@@ -26,12 +27,12 @@ public class AvailablePlayers {
             int rank = player.getRanking();
 
             queue = availablePlayers.get(rank);
-            queueS = availablePlayers.get(rank + 1);
             queueI = availablePlayers.get(rank - 1);
+            queueS = availablePlayers.get(rank + 1);
 
             queue.locker.lock(); // este lock adquire o lock da PlayerQueue do rank em questão? isto é, se entretanto chegar um gajo com o mesmo rank, vai ter ficar à espera para obter as queues?
-            queueS.locker.lock();
             queueI.locker.lock();
+            queueS.locker.lock();
         }
         finally {
             locker.unlock();
@@ -40,28 +41,50 @@ public class AvailablePlayers {
         try {
             queue.insertPlayer(player);
 
-            while (queue.size() < NUM_PLAYERS && queue.size() + queueI.size() < NUM_PLAYERS
-                                              && queue.size() + queueS.size() < NUM_PLAYERS) {
-                player.notInMatch.await();
-            }
+            int qSize = queue.size();
+            int qISize = queueI.size();
+            int qSSize = queueS.size();
+            List<Player> playersInMatch = null;
 
-            List<Player> playersInMatch;
-
-            if (queue.size() >= NUM_PLAYERS) {
+            if (qSize >= NUM_PLAYERS) {
                 playersInMatch = this.clearQueue(queue);
             }
-            else if (queue.size() + queueI.size() >= NUM_PLAYERS) {
+            else if (qSize + qISize >= NUM_PLAYERS) {
                 playersInMatch = this.clearQueue(queue, queueI);
             }
-            else if (queue.size() + queueS.size() >= NUM_PLAYERS) {
+            else if (qSize + qSSize >= NUM_PLAYERS) {
                 playersInMatch = this.clearQueue(queue, queueS);
             }
+            else {
+                while (qSize < NUM_PLAYERS && qSize + qISize < NUM_PLAYERS && qSize + qSSize < NUM_PLAYERS) { // while (true) ?
+                    player.notInMatch.await();
+                }
+            }
 
-            // dividir jogadores do jogo pelas duas equipas assegurando equilíbrio de ranks
-            // criar dois objetos Team
-            // com esses dois objetos, criar Match
-            // devolver Match
-            // (falta acordar restantes jogadores)
+            if (playersInMatch != null) { // o ultimo jogador a entrar cria o Match
+
+                // dividir jogadores do jogo pelas duas equipas assegurando equilíbrio de ranks
+
+                List<Player> t1 = playersInMatch.subList(0, 1);
+                List<Player> t2 = playersInMatch.subList(2, 3);
+
+                // criar dois objetos Team
+                // com esses dois objetos, criar Match
+
+                Match match = new Match(new Team(t1), new Team(t2));
+
+                // acordar restantes jogadores
+
+                for (Player p : playersInMatch) {
+                    p.notInMatch.signal();
+                }
+
+                // devolver Match
+
+                return match;
+            }
+
+            return null;
         }
         finally {
             locker.unlock();
@@ -76,7 +99,9 @@ public class AvailablePlayers {
         int s1 = queue1.size();
         int r = NUM_PLAYERS - s1;
 
-        List<Player> players = queue1.clearQueue(s1);
+        List<Player> players = new ArrayList<>();
+
+        players.addAll(queue1.clearQueue(s1));
         players.addAll(queue2.clearQueue(r));
 
         return players;
