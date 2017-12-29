@@ -11,7 +11,7 @@ public class Player implements Serializable {
     private int victories;
 
     final Lock locker;
-    Condition hasMatch;
+    Condition notInMatch;
 
     /* Construtores */
 
@@ -21,7 +21,7 @@ public class Player implements Serializable {
         ranking = 0;
         victories = 0;
         locker = new ReentrantLock();
-        hasMatch = locker.newCondition();
+        notInMatch = locker.newCondition();
     }
 
     public Player(String username, String password, int ranking, int victories) {
@@ -30,7 +30,7 @@ public class Player implements Serializable {
         this.ranking = ranking;
         this.victories = victories;
         locker = new ReentrantLock();
-        hasMatch = locker.newCondition();
+        notInMatch = locker.newCondition();
     }
 
     /* Getters */

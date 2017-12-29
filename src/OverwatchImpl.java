@@ -26,7 +26,7 @@ public class OverwatchImpl implements Overwatch {
             availablePlayers.addPlayer(player);
 
 //            while (!matches.isPlaying(player.getUsername())) {
-//                player.hasMatch.await();
+//                player.notInMatch.await();
 //            }
 
             return null;

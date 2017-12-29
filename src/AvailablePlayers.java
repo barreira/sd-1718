@@ -42,7 +42,7 @@ public class AvailablePlayers {
 
             while (queue.size() < NUM_PLAYERS && queue.size() + queueI.size() < NUM_PLAYERS
                                               && queue.size() + queueS.size() < NUM_PLAYERS) {
-                player.hasMatch.await();
+                player.notInMatch.await();
             }
 
             List<Player> playersInMatch;
