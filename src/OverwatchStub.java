@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OverwatchStub {
 
@@ -19,7 +21,7 @@ public class OverwatchStub {
         out = new PrintWriter(socket.getOutputStream(), true);
     }
 
-    public Player signUp(String username, String password) throws InvalidAccountException {
+    public Player signup(String username, String password) throws InvalidAccountException {
         try {
             Player p = null;
 
@@ -67,6 +69,31 @@ public class OverwatchStub {
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Match play(Player player) {
+        try {
+            message = "play";
+            out.println(message);
+            out.flush();
+
+            response = in.readLine();
+            String[] parts = response.split(":");
+
+            if (parts[0].equals("OK")) {
+                List<String> l = new ArrayList<>();
+
+                for (int i = 1; i <= Overwatch.NUM_PLAYERS; i++) {
+                    l.add(parts[i]);
+                }
+
+                Match m = new Match(new Team(l.subList(0, 1)), new Team(l.subList(2, 3)));
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public void closeSocket() throws IOException {

@@ -11,8 +11,8 @@ public class Match {
         this.team2 = team2;
     }
 
-    public List<Player> playersInMatch() {
-        List<Player> players = new ArrayList<>();
+    public List<String> playersInMatch() {
+        List<String> players = new ArrayList<>();
 
         players.addAll(team1.getPlayers());
         players.addAll(team2.getPlayers());
@@ -24,8 +24,8 @@ public class Match {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        for (Player p : playersInMatch()) {
-            sb.append(p.getUsername());
+        for (String p : playersInMatch()) {
+            sb.append(p);
             sb.append(":");
         }
 

@@ -2,12 +2,12 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+
 public class AvailablePlayers {
 
     private Map<Integer, PlayerQueue> availablePlayers;
 
     private final Lock locker;
-    private static final int NUM_PLAYERS = 4;
 
     public AvailablePlayers() {
         availablePlayers = new HashMap<>();
@@ -18,7 +18,7 @@ public class AvailablePlayers {
         }
     }
 
-    public Match addPlayer(Player player) throws InterruptedException {
+    public Match addPlayer(String player) throws InterruptedException {
         PlayerQueue queue, queueS, queueI;
 
         locker.lock();
@@ -44,19 +44,19 @@ public class AvailablePlayers {
             int qSize = queue.size();
             int qISize = queueI.size();
             int qSSize = queueS.size();
-            List<Player> playersInMatch = null;
+            List<String> playersInMatch = null;
 
-            if (qSize >= NUM_PLAYERS) {
+            if (qSize >= Overwatch.NUM_PLAYERS) {
                 playersInMatch = this.clearQueue(queue);
             }
-            else if (qSize + qISize >= NUM_PLAYERS) {
+            else if (qSize + qISize >= Overwatch.NUM_PLAYERS) {
                 playersInMatch = this.clearQueue(queue, queueI);
             }
-            else if (qSize + qSSize >= NUM_PLAYERS) {
+            else if (qSize + qSSize >= Overwatch.NUM_PLAYERS) {
                 playersInMatch = this.clearQueue(queue, queueS);
             }
             else {
-                while (qSize < NUM_PLAYERS && qSize + qISize < NUM_PLAYERS && qSize + qSSize < NUM_PLAYERS) { // while (true) ?
+                while (qSize < Overwatch.NUM_PLAYERS && qSize + qISize < Overwatch.NUM_PLAYERS && qSize + qSSize < Overwatch.NUM_PLAYERS) { // while (true) ?
                     player.notInMatch.await();
                 }
             }
@@ -76,7 +76,7 @@ public class AvailablePlayers {
                 // acordar restantes jogadores
 
                 for (Player p : playersInMatch) {
-                    p.notInMatch.signal();
+                    p.notInMatch.signal(); // não é preciso Condition
                 }
 
                 // devolver Match
@@ -92,12 +92,12 @@ public class AvailablePlayers {
     }
 
     private List<Player> clearQueue(PlayerQueue queue) {
-        return queue.clearQueue(NUM_PLAYERS);
+        return queue.clearQueue(Overwatch.NUM_PLAYERS);
     }
 
     private List<Player> clearQueue(PlayerQueue queue1, PlayerQueue queue2) {
         int s1 = queue1.size();
-        int r = NUM_PLAYERS - s1;
+        int r = Overwatch.NUM_PLAYERS - s1;
 
         List<Player> players = new ArrayList<>();
 
@@ -109,7 +109,7 @@ public class AvailablePlayers {
 
     private class PlayerQueue {
 
-        private List<Player> players;
+        private List<String> players;
         final ReentrantLock locker;
 
         private PlayerQueue() {
@@ -117,7 +117,7 @@ public class AvailablePlayers {
             locker = new ReentrantLock();
         }
 
-        private void insertPlayer(Player p) {
+        private void insertPlayer(String p) {
             players.add(p);
         }
 
@@ -125,13 +125,13 @@ public class AvailablePlayers {
             return players.size();
         }
 
-        private List<Player> clearQueue(int count) {
+        private List<String> clearQueue(int count) {
             Iterator it = players.iterator();
-            List<Player> list = new ArrayList<>();
+            List<String> list = new ArrayList<>();
             int i = 0;
 
             while (it.hasNext() && i < count) {
-                Player p = (Player) it.next();
+                String p = (String) it.next();
                 list.add(p);
                 it.remove();
                 i++;

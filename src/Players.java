@@ -1,8 +1,13 @@
+import java.util.HashMap;
 import java.util.Map;
 
 public class Players {
 
     private Map<String, Player> players;
+
+    public Players() {
+        players = new HashMap<>();
+    }
 
     public synchronized Player signup(String username, String password) throws InvalidAccountException {
         Player p = players.get(username);

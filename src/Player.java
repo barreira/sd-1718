@@ -15,6 +15,15 @@ public class Player implements Serializable {
 
     /* Construtores */
 
+    public Player() {
+        username = "";
+        password = "";
+        ranking = 0;
+        victories = 0;
+        locker = new ReentrantLock();
+        notInMatch = locker.newCondition();
+    }
+
     public Player(String username, String password) {
         this.username = username;
         this.password = password;

@@ -13,9 +13,10 @@ public class ConnectionHandler extends Thread {
 //    private Connections connections;
 //    private String fileName;
 
-    public ConnectionHandler(Socket socket, OverwatchImpl overwatch, String fileName) {
+    public ConnectionHandler(Socket socket, OverwatchImpl overwatch, Player player) {
         this.socket = socket;
         this.overwatch = overwatch;
+        this.player = player;
 //        this.fileName = fileName;
     }
 

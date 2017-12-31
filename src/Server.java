@@ -6,33 +6,35 @@ import java.net.Socket;
 
 public class Server {
 
-    private static final String FILE = "overwatch.dat";
+//    private static final String FILE = "overwatch.dat";
 
     public static void main(String[] args) throws IOException {
 
-        ServerSocket ss = new ServerSocket(2222);
-        OverwatchImpl overwatch = Server.initApp();
+        ServerSocket ss = new ServerSocket(4444);
+//        OverwatchImpl overwatch = Server.initApp();
+        OverwatchImpl overwatch = new OverwatchImpl();
+        Player player = new Player();
 
         while (true) {
             Socket cs = ss.accept();
-            ConnectionHandler ch =  new ConnectionHandler(cs, overwatch, FILE);
+            ConnectionHandler ch =  new ConnectionHandler(cs, overwatch, player);
             ch.start();
         }
     }
 
-    private static OverwatchImpl initApp() {
-
-        OverwatchImpl overwatch = null;
-
-        try {
-            ObjectInputStream oin = new ObjectInputStream(new FileInputStream(FILE));
-            overwatch = (OverwatchImpl) oin.readObject();
-            oin.close();
-        }
-        catch (Exception e) {
-            overwatch = new OverwatchImpl();
-        }
-
-        return overwatch;
-    }
+//    private static OverwatchImpl initApp() {
+//
+//        OverwatchImpl overwatch = null;
+//
+//        try {
+//            ObjectInputStream oin = new ObjectInputStream(new FileInputStream(FILE));
+//            overwatch = (OverwatchImpl) oin.readObject();
+//            oin.close();
+//        }
+//        catch (Exception e) {
+//            overwatch = new OverwatchImpl();
+//        }
+//
+//        return overwatch;
+//    }
 }
