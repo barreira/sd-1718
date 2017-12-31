@@ -1,8 +1,8 @@
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Server {
 
@@ -12,13 +12,19 @@ public class Server {
 
         ServerSocket ss = new ServerSocket(2222);
 //        OverwatchImpl overwatch = Server.initApp();
-        OverwatchImpl overwatch = new OverwatchImpl();
+
         Player player = new Player();
+        Players players = new Players();
+        AvailablePlayers availablePlayers = new AvailablePlayers();
+        Matches matches = new Matches();
+        Map<String, SharedCondition> shared = new HashMap<>();
 
         while (true) {
             Socket cs = ss.accept();
-            ConnectionHandler ch =  new ConnectionHandler(cs, overwatch, player);
-            ch.start();
+
+            OverwatchThread owt =  new OverwatchThread(cs, player, players, availablePlayers, matches, shared);
+
+            owt.start();
         }
     }
 

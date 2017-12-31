@@ -8,11 +8,8 @@ public class AvailablePlayers {
 
     private Map<Integer, PlayerQueue> availablePlayers;
 
-    private final Lock locker;
-
     public AvailablePlayers() {
         availablePlayers = new HashMap<>();
-        locker = new ReentrantLock();
 
         for (int i = 0; i <= 9; i++) {
             availablePlayers.put(i, new PlayerQueue());
@@ -22,81 +19,73 @@ public class AvailablePlayers {
     public Match addPlayer(Player player) throws InterruptedException {
         PlayerQueue queue, queueS, queueI;
 
-        locker.lock();
+        synchronized (availablePlayers) {
 
-        try {
             int rank = player.getRanking();
 
             availablePlayers.get(rank).insertPlayer(player);
 
             queue = availablePlayers.get(rank);
-            queueI = availablePlayers.get(rank - 1);
-            queueS = availablePlayers.get(rank + 1);
+//            queueI = availablePlayers.get(rank - 1);
+//            queueS = availablePlayers.get(rank + 1);
 
             queue.locker.lock(); // este lock adquire o lock da PlayerQueue do rank em questão? isto é, se entretanto chegar um gajo com o mesmo rank, vai ter ficar à espera para obter as queues
-            if (queueI != null) queueI.locker.lock();
-            if (queueS != null) queueS.locker.lock();
-        }
-        finally {
-            locker.unlock();
-        }
+//            if (queueI != null) queueI.locker.lock();
+//            if (queueS != null) queueS.locker.lock();
 
-        try {
-            int qISize = 0, qSSize = 0;
+            try {
+                int qISize = 0, qSSize = 0;
 
-            int qSize = queue.size();
-            if (queueI != null) qISize = queueI.size();
-            if (queueS != null) qSSize = queueS.size();
-            List<Player> playersInMatch = null;
+                int qSize = queue.size();
+//            if (queueI != null) qISize = queueI.size();
+//            if (queueS != null) qSSize = queueS.size();
+                List<Player> playersInMatch = null;
 
-            if (qSize >= Overwatch.NUM_PLAYERS) {
-                playersInMatch = this.clearQueue(queue);
-            }
-            else if (qSize + qISize >= Overwatch.NUM_PLAYERS && queueI != null) {
-                playersInMatch = this.clearQueue(queue, queueI);
-            }
-            else if (qSize + qSSize >= Overwatch.NUM_PLAYERS && queueS != null) {
-                playersInMatch = this.clearQueue(queue, queueS);
-            }
-//            else {
-//                while (qSize < Overwatch.NUM_PLAYERS && qSize + qISize < Overwatch.NUM_PLAYERS && qSize + qSSize < Overwatch.NUM_PLAYERS) { // while (true) ?
-//                    player.notInMatch.await();
-//                }
+                if (qSize >= Overwatch.NUM_PLAYERS) {
+                    playersInMatch = this.clearQueue(queue);
+                }
+//            else if (qSize + qISize >= Overwatch.NUM_PLAYERS && queueI != null) {
+//                playersInMatch = this.clearQueue(queue, queueI);
+//            }
+//            else if (qSize + qSSize >= Overwatch.NUM_PLAYERS && queueS != null) {
+//                playersInMatch = this.clearQueue(queue, queueS);
 //            }
 
-            if (playersInMatch != null) { // o ultimo jogador a entrar cria o Match
+                if (playersInMatch != null) { // o ultimo jogador a entrar cria o Match
 
-                // dividir jogadores do jogo pelas duas equipas assegurando equilíbrio de ranks
+                    // dividir jogadores do jogo pelas duas equipas assegurando equilíbrio de ranks
 
-                List<Player> t1 = playersInMatch.subList(0, 1);
-                List<Player> t2 = playersInMatch.subList(2, 3);
+                    List<Player> t1 = playersInMatch.subList(0, 2);
+                    List<Player> t2 = playersInMatch.subList(2, 4);
 
-                // criar dois objetos Team
-                // com esses dois objetos, criar Match
+                    // criar dois objetos Team
+                    // com esses dois objetos, criar Match
 
-                List<String> usernames1 = t1.stream().map(Player::getUsername).collect(Collectors.toList());
-                List<String> usernames2 = t2.stream().map(Player::getUsername).collect(Collectors.toList());
+                    List<String> usernames1 = t1.stream().map(Player::getUsername).collect(Collectors.toList());
+                    List<String> usernames2 = t2.stream().map(Player::getUsername).collect(Collectors.toList());
 
-                Match match = new Match(new Team(usernames1), new Team(usernames2));
+                    Match match = new Match(new Team(usernames1), new Team(usernames2));
 
-                // acordar restantes jogadores
+                    // acordar restantes jogadores
 
 //                for (Player p : playersInMatch) {
 //                    p.notInMatch.signal(); // não é preciso Condition
 //                }
 
-                // devolver Match
+                    // devolver Match
 
-                return match;
+                    return match;
+                }
+
+                return null;
             }
+            finally {
+                queue.locker.unlock();
+//            if (queueI != null) queueI.locker.lock();
+//            if (queueS != null) queueS.locker.lock();
+            }
+        }
 
-            return null;
-        }
-        finally {
-            queue.locker.unlock();
-            if (queueI != null) queueI.locker.lock();
-            if (queueS != null) queueS.locker.lock();
-        }
     }
 
     private List<Player> clearQueue(PlayerQueue queue) {

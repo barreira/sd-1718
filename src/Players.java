@@ -9,7 +9,7 @@ public class Players {
         players = new HashMap<>();
     }
 
-    public synchronized Player signup(String username, String password) throws InvalidAccountException {
+    public Player signup(String username, String password) throws InvalidAccountException {
         Player p = players.get(username);
 
         if (p == null) {
