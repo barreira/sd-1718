@@ -1,6 +1,7 @@
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 
 public class AvailablePlayers {
@@ -18,7 +19,7 @@ public class AvailablePlayers {
         }
     }
 
-    public Match addPlayer(String player) throws InterruptedException {
+    public Match addPlayer(Player player) throws InterruptedException {
         PlayerQueue queue, queueS, queueI;
 
         locker.lock();
@@ -26,33 +27,38 @@ public class AvailablePlayers {
         try {
             int rank = player.getRanking();
 
+            availablePlayers.get(rank).insertPlayer(player);
+
             queue = availablePlayers.get(rank);
             queueI = availablePlayers.get(rank - 1);
             queueS = availablePlayers.get(rank + 1);
 
             queue.locker.lock(); // este lock adquire o lock da PlayerQueue do rank em questão? isto é, se entretanto chegar um gajo com o mesmo rank, vai ter ficar à espera para obter as queues?
-            queueI.locker.lock();
-            queueS.locker.lock();
+
+            if (rank > 0) queueI.locker.lock();
+            if (rank < 9) queueS.locker.lock();
         }
         finally {
             locker.unlock();
         }
 
         try {
+            int qISize = 0, qSSize = 0;
+
             queue.insertPlayer(player);
 
             int qSize = queue.size();
-            int qISize = queueI.size();
-            int qSSize = queueS.size();
-            List<String> playersInMatch = null;
+            if (queueI != null) qISize = queueI.size();
+            if (queueS != null) qSSize = queueS.size();
+            List<Player> playersInMatch = null;
 
             if (qSize >= Overwatch.NUM_PLAYERS) {
                 playersInMatch = this.clearQueue(queue);
             }
-            else if (qSize + qISize >= Overwatch.NUM_PLAYERS) {
+            else if (qSize + qISize >= Overwatch.NUM_PLAYERS && queueI != null) {
                 playersInMatch = this.clearQueue(queue, queueI);
             }
-            else if (qSize + qSSize >= Overwatch.NUM_PLAYERS) {
+            else if (qSize + qSSize >= Overwatch.NUM_PLAYERS && queueS != null) {
                 playersInMatch = this.clearQueue(queue, queueS);
             }
             else {
@@ -71,7 +77,10 @@ public class AvailablePlayers {
                 // criar dois objetos Team
                 // com esses dois objetos, criar Match
 
-                Match match = new Match(new Team(t1), new Team(t2));
+                List<String> usernames1 = t1.stream().map(Player::getUsername).collect(Collectors.toList());
+                List<String> usernames2 = t2.stream().map(Player::getUsername).collect(Collectors.toList());
+
+                Match match = new Match(new Team(usernames1), new Team(usernames2));
 
                 // acordar restantes jogadores
 
@@ -92,7 +101,7 @@ public class AvailablePlayers {
     }
 
     private List<Player> clearQueue(PlayerQueue queue) {
-        return queue.clearQueue(Overwatch.NUM_PLAYERS);
+        return queue.clear(Overwatch.NUM_PLAYERS);
     }
 
     private List<Player> clearQueue(PlayerQueue queue1, PlayerQueue queue2) {
@@ -101,15 +110,15 @@ public class AvailablePlayers {
 
         List<Player> players = new ArrayList<>();
 
-        players.addAll(queue1.clearQueue(s1));
-        players.addAll(queue2.clearQueue(r));
+        players.addAll(queue1.clear(s1));
+        players.addAll(queue2.clear(r));
 
         return players;
     }
 
     private class PlayerQueue {
 
-        private List<String> players;
+        private List<Player> players;
         final ReentrantLock locker;
 
         private PlayerQueue() {
@@ -117,7 +126,7 @@ public class AvailablePlayers {
             locker = new ReentrantLock();
         }
 
-        private void insertPlayer(String p) {
+        private void insertPlayer(Player p) {
             players.add(p);
         }
 
@@ -125,13 +134,13 @@ public class AvailablePlayers {
             return players.size();
         }
 
-        private List<String> clearQueue(int count) {
+        private List<Player> clear(int count) {
             Iterator it = players.iterator();
-            List<String> list = new ArrayList<>();
+            List<Player> list = new ArrayList<>();
             int i = 0;
 
             while (it.hasNext() && i < count) {
-                String p = (String) it.next();
+                Player p = (Player) it.next();
                 list.add(p);
                 it.remove();
                 i++;

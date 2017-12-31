@@ -10,7 +10,7 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
 
-        ServerSocket ss = new ServerSocket(4444);
+        ServerSocket ss = new ServerSocket(2222);
 //        OverwatchImpl overwatch = Server.initApp();
         OverwatchImpl overwatch = new OverwatchImpl();
         Player player = new Player();

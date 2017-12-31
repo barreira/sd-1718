@@ -55,7 +55,7 @@ public class ConnectionHandler extends Thread {
                 }
                 else if (parts[0].equals("play")) {
                     try {
-                        Match match = overwatch.play(player);
+                        Match match = overwatch.play();
 
                         response = "OK:" + match.toString();
                     }

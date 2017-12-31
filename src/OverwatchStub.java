@@ -71,7 +71,7 @@ public class OverwatchStub {
         }
     }
 
-    public Match play(Player player) {
+    public Match play() {
         try {
             message = "play";
             out.println(message);
@@ -88,12 +88,16 @@ public class OverwatchStub {
                 }
 
                 Match m = new Match(new Team(l.subList(0, 1)), new Team(l.subList(2, 3)));
+
+                return m;
+            }
+            else {
+                return null;
             }
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public void closeSocket() throws IOException {
