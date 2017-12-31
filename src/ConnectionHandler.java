@@ -38,9 +38,15 @@ public class ConnectionHandler extends Thread {
                         overwatch.signup(parts[1], parts[2]);
 
                         response = "OK";
+
+                        out.println(response);
+                        out.flush();
                     }
                     catch (InvalidAccountException e) {
                         response = "ERROR";
+
+                        out.println(response);
+                        out.flush();
                     }
                 }
                 else if (parts[0].equals("login")) {
@@ -48,24 +54,33 @@ public class ConnectionHandler extends Thread {
                         player = overwatch.login(parts[1], parts[2]);
 
                         response = "OK:" + player.getRanking() + ":" + player.getVictories();
+
+                        out.println(response);
+                        out.flush();
                     }
                     catch (InvalidAccountException e) {
                         response = "ERROR";
+
+                        out.println(response);
+                        out.flush();
                     }
                 }
                 else if (parts[0].equals("play")) {
                     try {
-                        Match match = overwatch.play();
+                        Match match = overwatch.play(player);
 
                         response = "OK:" + match.toString();
+
+                        out.println(response);
+                        out.flush();
                     }
                     catch (InterruptedException e) {
                         response = "ERROR";
+
+                        out.println(response);
+                        out.flush();
                     }
                 }
-
-                out.println(response);
-                out.flush();
             }
 
             socket.close();

@@ -71,7 +71,7 @@ public class OverwatchStub {
         }
     }
 
-    public Match play() {
+    public Match play(Player player) {
         try {
             message = "play";
             out.println(message);

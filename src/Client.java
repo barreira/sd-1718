@@ -2,20 +2,24 @@ import java.io.IOException;
 
 public class Client {
 
-    public static void main(String[] args) throws IOException, InvalidAccountException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
-        OverwatchStub overwatch = new OverwatchStub("localhost", 2222);
+        final int N = 4;
 
-        Player p = overwatch.signup("abc", "123");
+        Player[] jogadores = new Player[N];
+        ClientThread[] threads = new ClientThread[N];
 
-        p = overwatch.login("abc", "123");
+        threads[0] = new ClientThread("Ana", "123");
+        threads[1] = new ClientThread("Bruno", "123");
+        threads[2] = new ClientThread("Carlos", "123");
+        threads[3] = new ClientThread("Daniela", "123");
 
-        System.out.println(p.getUsername() + p.getPassword() + p.getRanking() + p.getVictories());
+        for (int i = 0; i < N; i++) {
+            threads[i].start();
+        }
 
-        Match m = overwatch.play();
-
-        System.out.println(m.toString());
-
-        overwatch.closeSocket();
+        for (int i = 0; i < N; i++) {
+            threads[i].join();
+        }
     }
 }
