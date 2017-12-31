@@ -1,31 +1,53 @@
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class OverwatchImpl implements Overwatch {
 
-//    private Matches matches;
+    private Matches matches;
     private Players players;
     private AvailablePlayers availablePlayers;
 
+    private final Lock locker;
+    private Condition notInMatch;
+
     public OverwatchImpl() {
-//        matches = new Matches();
+        matches = new Matches();
         players = new Players();
         availablePlayers = new AvailablePlayers();
+        locker = new ReentrantLock();
+        notInMatch = locker.newCondition();
     }
 
     public Player signup(String username, String password) throws InvalidAccountException {
-        Player player = players.signup(username, password);
-
-        return player;
+        return players.signup(username, password);
     }
 
     public Player login(String username, String password) throws InvalidAccountException {
-        Player player = players.login(username, password);
-
-        return player;
+        return players.login(username, password);
     }
 
     public Match play(Player player) throws InterruptedException {
+        locker.lock();
+        player.locker.lock();
 
-        return availablePlayers.addPlayer(player);
+        try {
+            Match m = availablePlayers.addPlayer(player);
+
+            if (m != null) {
+                matches.addMatch(m);
+            }
+
+            while (!matches.isPlaying(player.getUsername())) {
+                notInMatch.await();
+            }
+
+            return matches.getPlayerMatch(player.getUsername());
+        }
+        finally {
+            player.locker.unlock();
+            locker.unlock();
+        }
 
 //            while (!matches.isPlaying(player.getUsername())) {
 //                player.notInMatch.await();

@@ -11,6 +11,14 @@ public class Match {
         this.team2 = team2;
     }
 
+    public Team getTeam1() {
+        return team1;
+    }
+
+    public Team getTeam2() {
+        return team2;
+    }
+
     public List<String> playersInMatch() {
         List<String> players = new ArrayList<>();
 

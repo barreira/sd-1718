@@ -33,10 +33,9 @@ public class AvailablePlayers {
             queueI = availablePlayers.get(rank - 1);
             queueS = availablePlayers.get(rank + 1);
 
-            queue.locker.lock(); // este lock adquire o lock da PlayerQueue do rank em questão? isto é, se entretanto chegar um gajo com o mesmo rank, vai ter ficar à espera para obter as queues?
-
-            if (rank > 0) queueI.locker.lock();
-            if (rank < 9) queueS.locker.lock();
+            queue.locker.lock(); // este lock adquire o lock da PlayerQueue do rank em questão? isto é, se entretanto chegar um gajo com o mesmo rank, vai ter ficar à espera para obter as queues
+            if (queueI != null) queueI.locker.lock();
+            if (queueS != null) queueS.locker.lock();
         }
         finally {
             locker.unlock();
@@ -44,8 +43,6 @@ public class AvailablePlayers {
 
         try {
             int qISize = 0, qSSize = 0;
-
-            queue.insertPlayer(player);
 
             int qSize = queue.size();
             if (queueI != null) qISize = queueI.size();
@@ -61,11 +58,11 @@ public class AvailablePlayers {
             else if (qSize + qSSize >= Overwatch.NUM_PLAYERS && queueS != null) {
                 playersInMatch = this.clearQueue(queue, queueS);
             }
-            else {
-                while (qSize < Overwatch.NUM_PLAYERS && qSize + qISize < Overwatch.NUM_PLAYERS && qSize + qSSize < Overwatch.NUM_PLAYERS) { // while (true) ?
-                    player.notInMatch.await();
-                }
-            }
+//            else {
+//                while (qSize < Overwatch.NUM_PLAYERS && qSize + qISize < Overwatch.NUM_PLAYERS && qSize + qSSize < Overwatch.NUM_PLAYERS) { // while (true) ?
+//                    player.notInMatch.await();
+//                }
+//            }
 
             if (playersInMatch != null) { // o ultimo jogador a entrar cria o Match
 
@@ -84,9 +81,9 @@ public class AvailablePlayers {
 
                 // acordar restantes jogadores
 
-                for (Player p : playersInMatch) {
-                    p.notInMatch.signal(); // não é preciso Condition
-                }
+//                for (Player p : playersInMatch) {
+//                    p.notInMatch.signal(); // não é preciso Condition
+//                }
 
                 // devolver Match
 
@@ -96,7 +93,9 @@ public class AvailablePlayers {
             return null;
         }
         finally {
-            locker.unlock();
+            queue.locker.unlock();
+            if (queueI != null) queueI.locker.lock();
+            if (queueS != null) queueS.locker.lock();
         }
     }
 
