@@ -106,16 +106,4 @@ public class Matches {
             locker.unlock();
         }
     }
-
-
-//    public List<String> getPlayers(int id) {
-//        queueLocker.lock();
-//
-//        try {
-//            return matches.get(id);
-//        }
-//        finally {
-//            queueLocker.unlock();
-//        }
-//    }
 }

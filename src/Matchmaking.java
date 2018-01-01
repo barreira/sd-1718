@@ -11,12 +11,11 @@ class Matchmaking {
     private static final int CENTRAL = 1;
     private static final int CENTRAL_SUPERIOR = 2;
 
-
     private final Map<Integer, PlayerQueue> availablePlayers;
     private Map<String, WaitingPlayer> waitingPlayers;
     private final ReentrantLock locker;
 
-    
+
     Matchmaking() {
         availablePlayers = new HashMap<>();
         waitingPlayers = new HashMap<>();
@@ -46,15 +45,18 @@ class Matchmaking {
 
         if (queue.size() >= NUM_PLAYERS) {
             queue.lock();
-        } else if (queueI != null && (queueI.size() + queue.size() >= NUM_PLAYERS)) {
+        }
+        else if (queueI != null && (queueI.size() + queue.size() >= NUM_PLAYERS)) {
             queueI.lock();
             queue.lock();
             limit = CENTRAL_INFERIOR;
-        } else if (queueS != null && (queueS.size() + queue.size() >= NUM_PLAYERS)) {
+        }
+        else if (queueS != null && (queueS.size() + queue.size() >= NUM_PLAYERS)) {
             queueS.lock();
             queue.lock();
             limit = CENTRAL_SUPERIOR;
-        } else {
+        }
+        else {
             // Neste caso liberta-se o lock do matchmakin
 
             // o jogador tem que esperar
@@ -73,9 +75,11 @@ class Matchmaking {
 
         if (limit == CENTRAL) {
             playersInMatch = this.createMatch(queue, matches);
-        } else if (limit == CENTRAL_INFERIOR) {
+        }
+        else if (limit == CENTRAL_INFERIOR) {
             this.createMatch(queue, queueI, matches);
-        } else {
+        }
+        else {
             this.createMatch(queue, queueS, matches);
         }
 
@@ -93,7 +97,6 @@ class Matchmaking {
         return matches.getMatchID(p);
     }
 
-
     private WaitingPlayer getWaitingPlayer(String p) {
         WaitingPlayer w = waitingPlayers.get(p);
 
@@ -105,7 +108,6 @@ class Matchmaking {
         return w;
     }
 
-
     private List<String> createMatch(PlayerQueue queue, Matches matches) {
         List<String> players = queue.remove(NUM_PLAYERS);
 
@@ -114,7 +116,6 @@ class Matchmaking {
 
         return players;
     }
-
 
     private List<String> createMatch(PlayerQueue queue1, PlayerQueue queue2, Matches matches) {
         int s1 = queue1.size();
@@ -145,7 +146,6 @@ class Matchmaking {
         void await() throws InterruptedException {
             condition.await();
         }
-
 
         void signal() {
             condition.signal();
