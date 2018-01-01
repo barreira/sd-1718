@@ -34,4 +34,8 @@ class PlayerQueue {
 
         return list;
     }
+
+    public void remove(String username) {
+        queue.remove(username);
+    }
 }

@@ -67,6 +67,9 @@ public class OverwatchThread extends Thread {
                         response = "ERROR";
                     }
                 }
+                else if (parts[0].equals("logout")) {
+                    //
+                }
 
                 out.println(response);
                 out.flush();
@@ -85,7 +88,15 @@ public class OverwatchThread extends Thread {
     }
 
     public Player login(String username, String password) throws InvalidAccountException {
+        matchmaking.clearPlayer(username);
+        matches.clearMatch(username);
+
         return players.login(username, password);
+    }
+
+    public void logout(String username) {
+        matchmaking.clearPlayer(username);
+        matches.clearMatch(username);
     }
 
     public Match play() throws InterruptedException {

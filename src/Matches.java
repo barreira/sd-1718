@@ -106,4 +106,12 @@ public class Matches {
             locker.unlock();
         }
     }
+
+    public void clearMatch(String username) {
+        locker.lock();
+
+        matches.remove(getMatchID(username));
+
+        locker.unlock();
+    }
 }

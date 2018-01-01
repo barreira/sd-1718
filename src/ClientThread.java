@@ -16,7 +16,7 @@ public class ClientThread extends Thread {
 
 //            overwatch.signup(username, password);
             Player player = overwatch.login(username, password);
-            System.out.println(player.getUsername() + " " + player.getPassword() + " " + player.getRanking() + " " + player.getVictories());
+//            System.out.println(player.getUsername() + " " + player.getPassword() + " " + player.getRanking() + " " + player.getVictories());
 
             Match m = overwatch.play(player);
             System.out.println(m.toString());
