@@ -36,65 +36,64 @@ class Matchmaking {
         String p = player.getUsername();
 
         locker.lock();
-        availablePlayers.get(rank).add(p);
-        queue = availablePlayers.get(rank);
-        queueI = availablePlayers.get(rank - 1);
-        queueS = availablePlayers.get(rank + 1);
 
-        // adquirir os locks das queues necessários e libertar o lock do map
+        try {
+            availablePlayers.get(rank).add(p);
+            queue = availablePlayers.get(rank);
+            queueI = availablePlayers.get(rank - 1);
+            queueS = availablePlayers.get(rank + 1);
 
-        if (queue.size() >= NUM_PLAYERS) {
-            queue.lock();
-        }
-        else if (queueI != null && (queueI.size() + queue.size() >= NUM_PLAYERS)) {
-            queueI.lock();
-            queue.lock();
-            limit = CENTRAL_INFERIOR;
-        }
-        else if (queueS != null && (queueS.size() + queue.size() >= NUM_PLAYERS)) {
-            queueS.lock();
-            queue.lock();
-            limit = CENTRAL_SUPERIOR;
-        }
-        else {
-            // Neste caso liberta-se o lock do matchmakin
+            // adquirir os locks das queues necessários e libertar o lock do map
 
-            // o jogador tem que esperar
-            WaitingPlayer w = this.getWaitingPlayer(p);
-            w.await();
+            if (queue.size() >= NUM_PLAYERS) {
+                limit = CENTRAL;
+            }
+            else if (queueI != null && (queueI.size() + queue.size() >= NUM_PLAYERS)) {
+                limit = CENTRAL_INFERIOR;
+            }
+            else if (queueS != null && (queueS.size() + queue.size() >= NUM_PLAYERS)) {
+                limit = CENTRAL_SUPERIOR;
+            }
+            else {
+                // Neste caso liberta-se o lock do matchmakin
 
-            locker.unlock();
-            // Quando o jogador é acordado devolve logo a match dele
+                // o jogador tem que esperar
+                WaitingPlayer w = this.getWaitingPlayer(p);
+                w.await();
+
+                // Quando o jogador é acordado devolve logo a match dele
+                return matches.getMatchID(p);
+            }
+
+            // Chegando aqui é sinal que o último jogador fez com que uma match seja válida
+            // Liberta-se o lock do matchMacking primeiro
+
+            List<String> playersInMatch = null;
+
+            if (limit == CENTRAL) {
+                playersInMatch = this.createMatch(queue, matches);
+            }
+            else if (limit == CENTRAL_INFERIOR) {
+                playersInMatch = this.createMatch(queue, queueI, matches);
+            }
+            else {
+                playersInMatch = this.createMatch(queue, queueS, matches);
+            }
+
+            // Acordar todos os jogadores que estão à espera
+            for (String s : playersInMatch) {
+                if (!s.equals(p)) {
+                    waitingPlayers.get(s).signal();
+                    waitingPlayers.remove(s);
+                }
+            }
+
+            // Devolver o codigo da match
             return matches.getMatchID(p);
         }
-
-        // Chegando aqui é sinal que o último jogador fez com que uma match seja válida
-        // Liberta-se o lock do matchMacking primeiro
-
-        List<String> playersInMatch = null;
-
-        if (limit == CENTRAL) {
-            playersInMatch = this.createMatch(queue, matches);
+        finally {
+            locker.unlock();
         }
-        else if (limit == CENTRAL_INFERIOR) {
-            this.createMatch(queue, queueI, matches);
-        }
-        else {
-            this.createMatch(queue, queueS, matches);
-        }
-
-
-        // Acordar todos os jogadores que estão à espera
-        for (String s : playersInMatch) {
-            if (!s.equals(p)) {
-                waitingPlayers.get(s).signal();
-            }
-        }
-
-        locker.unlock();
-
-        // Devolver o codigo da match
-        return matches.getMatchID(p);
     }
 
     private WaitingPlayer getWaitingPlayer(String p) {
@@ -111,7 +110,6 @@ class Matchmaking {
     private List<String> createMatch(PlayerQueue queue, Matches matches) {
         List<String> players = queue.remove(NUM_PLAYERS);
 
-        queue.unlock();
         matches.addMatch(players);
 
         return players;
@@ -126,8 +124,6 @@ class Matchmaking {
         players.addAll(queue1.remove(s1));
         players.addAll(queue2.remove(r));
 
-        queue1.unlock();
-        queue2.unlock();
         matches.addMatch(players);
 
         return players;

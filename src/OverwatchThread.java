@@ -12,8 +12,8 @@ public class OverwatchThread extends Thread {
     private Players players;
     private Matchmaking matchmaking;
     private Matches matches;
+    private String fileName;
 //    private Connections connections;
-//    private String fileName;
 
 
     public OverwatchThread(Socket socket, Player player, Players players, Matchmaking matchmaking, Matches matches) {
@@ -73,7 +73,7 @@ public class OverwatchThread extends Thread {
             }
 
             socket.close();
-//            overwatch.saveObject(fileName);
+//            players.saveObject(fileName);
         }
         catch (IOException e) {
             e.printStackTrace();

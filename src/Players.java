@@ -1,3 +1,6 @@
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -56,5 +59,23 @@ public class Players {
         finally {
             locker.unlock();
         }
+    }
+
+    public void add(Player player) {
+        players.put(player.getUsername(), player);
+    }
+
+    public synchronized void saveObject(String file) throws IOException {
+        ObjectOutputStream oout = new ObjectOutputStream(new FileOutputStream(file));
+
+        try {
+            oout.writeObject(this);
+        }
+        catch (IOException e) {
+            throw e;
+        }
+
+        oout.flush();
+        oout.close();
     }
 }

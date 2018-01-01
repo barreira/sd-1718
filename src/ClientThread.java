@@ -14,7 +14,7 @@ public class ClientThread extends Thread {
         try {
             OverwatchStub overwatch = new OverwatchStub("localhost", 2222);
 
-            overwatch.signup(username, password);
+//            overwatch.signup(username, password);
             Player player = overwatch.login(username, password);
             System.out.println(player.getUsername() + " " + player.getPassword() + " " + player.getRanking() + " " + player.getVictories());
 
