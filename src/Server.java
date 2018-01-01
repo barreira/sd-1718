@@ -15,14 +15,13 @@ public class Server {
 
         Player player = new Player();
         Players players = new Players();
-        AvailablePlayers availablePlayers = new AvailablePlayers();
+        Matchmaking matchmaking = new Matchmaking();
         Matches matches = new Matches();
-        Map<String, SharedCondition> shared = new HashMap<>();
 
         while (true) {
             Socket cs = ss.accept();
 
-            OverwatchThread owt =  new OverwatchThread(cs, player, players, availablePlayers, matches, shared);
+            OverwatchThread owt =  new OverwatchThread(cs, player, players, matchmaking, matches);
 
             owt.start();
         }

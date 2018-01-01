@@ -87,7 +87,7 @@ public class OverwatchStub {
                     l.add(parts[i]);
                 }
 
-                Match m = new Match(new Team(l.subList(0, 1)), new Team(l.subList(2, 3)));
+                Match m = new Match(new Team(l.subList(0, 2)), new Team(l.subList(2,4)));
 
                 return m;
             }

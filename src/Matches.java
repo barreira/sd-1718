@@ -34,6 +34,17 @@ public class Matches {
         }
     }
 
+
+    public Match getMatch(int id) {
+        try {
+            locker.lock();
+            return matches.get(id);
+        } finally {
+            locker.unlock();
+        }
+    }
+
+
     public Match getPlayerMatch(String username) {
         locker.lock();
 
@@ -64,14 +75,47 @@ public class Matches {
         }
     }
 
+
+    void addMatch(List<String> players) {
+        List<String> t1 = players.subList(0, 2);
+        List<String> t2 = players.subList(2, 4);
+
+        locker.lock();
+        matches.put(nextID++, new Match(new Team(t1), new Team(t2)));
+        locker.unlock();
+    }
+
+
+    public int getMatchID(String p) {
+        int mID = -1;
+
+        try {
+            locker.lock();
+
+            for (int id : matches.keySet()) {
+                Match m = matches.get(id);
+
+                if (m.getTeam1().getPlayers().contains(p) || m.getTeam2().getPlayers().contains(p)) {
+                    mID = id;
+                    break;
+                }
+            }
+
+            return mID;
+        } finally {
+            locker.unlock();
+        }
+    }
+
+
 //    public List<String> getPlayers(int id) {
-//        locker.lock();
+//        queueLocker.lock();
 //
 //        try {
 //            return matches.get(id);
 //        }
 //        finally {
-//            locker.unlock();
+//            queueLocker.unlock();
 //        }
 //    }
 }

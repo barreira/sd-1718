@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Map;
 
 public class OverwatchThread extends Thread {
 
@@ -11,20 +10,18 @@ public class OverwatchThread extends Thread {
     private Player player;
 
     private Players players;
-    private AvailablePlayers availablePlayers;
+    private Matchmaking matchmaking;
     private Matches matches;
-    private Map<String, SharedCondition> shared;
 //    private Connections connections;
 //    private String fileName;
 
 
-    public OverwatchThread(Socket socket, Player player, Players players, AvailablePlayers availablePlayers, Matches matches, Map<String, SharedCondition> shared) {
+    public OverwatchThread(Socket socket, Player player, Players players, Matchmaking matchmaking, Matches matches) {
         this.socket = socket;
         this.player = player;
         this.players = players;
-        this.availablePlayers = availablePlayers;
+        this.matchmaking = matchmaking;
         this.matches = matches;
-        this.shared = shared;
     }
 
     public void run() {
@@ -88,41 +85,12 @@ public class OverwatchThread extends Thread {
     }
 
     public Player login(String username, String password) throws InvalidAccountException {
-        Player p = players.login(username, password);
-
-        SharedCondition sc = new SharedCondition();
-
-        shared.put(username, sc);
-
-        return p;
+        return players.login(username, password);
     }
 
     public Match play() throws InterruptedException {
+        int matchID = matchmaking.addPlayer(player, matches);
 
-        SharedCondition sc = shared.get(player.getUsername());
-        sc.getLock();
-
-        try {
-            Match m = availablePlayers.addPlayer(player);
-
-            if (m != null) {
-                matches.addMatch(m);
-
-                for (String username : m.playersInMatch()) {
-                    if (!username.equals(player.getUsername())) {
-                        shared.get(username).signalCond();
-                    }
-                }
-            }
-
-            while (!matches.isPlaying(player.getUsername())) {
-                shared.get(player.getUsername()).waitCond();
-            }
-
-            return matches.getPlayerMatch(player.getUsername());
-        }
-        finally {
-            shared.get(player.getUsername()).releaseLock();
-        }
+        return matches.getMatch(matchID);
     }
 }
