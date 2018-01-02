@@ -4,10 +4,12 @@ public class ClientThread extends Thread {
 
     private String username;
     private String password;
+    private String hero;
 
-    public ClientThread(String username, String password) {
+    public ClientThread(String username, String password, String hero) {
         this.username = username;
         this.password = password;
+        this.hero = hero;
     }
 
     public void run() {
@@ -18,8 +20,9 @@ public class ClientThread extends Thread {
             Player player = overwatch.login(username, password);
 //            System.out.println(player.getUsername() + " " + player.getPassword() + " " + player.getRanking() + " " + player.getVictories());
 
-            Match m = overwatch.play(player);
-            System.out.println(m.toString());
+            Match m = overwatch.play();
+
+            overwatch.selectHero(username, hero);
 
             overwatch.closeSocket();
         }

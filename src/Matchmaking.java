@@ -80,10 +80,6 @@ class Matchmaking {
                 playersInMatch = this.createMatch(queue, queueS, matches);
             }
 
-
-            System.out.println(p);
-            System.out.println("antes " + waitingPlayers.keySet().toString());
-
             // Acordar todos os jogadores que estão à espera
             for (String s : playersInMatch) {
                 if (!s.equals(p)) {
@@ -91,8 +87,6 @@ class Matchmaking {
                     waitingPlayers.remove(s);
                 }
             }
-
-            System.out.println("depois " + waitingPlayers.keySet().toString());
 
             // Devolver o codigo da match
             return matches.getMatchID(p);

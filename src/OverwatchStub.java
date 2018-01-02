@@ -71,29 +71,32 @@ public class OverwatchStub {
         }
     }
 
-    public Match play(Player player) {
+    public Match play() {
         try {
             message = "play";
             out.println(message);
             out.flush();
 
             response = in.readLine();
-            String[] parts = response.split(":");
 
-            if (parts[0].equals("OK")) {
-                List<String> l = new ArrayList<>();
+            System.out.println(response);
 
-                for (int i = 1; i <= Overwatch.NUM_PLAYERS; i++) {
-                    l.add(parts[i]);
-                }
+            return null;
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-                Match m = new Match(new Team(l.subList(0, 2)), new Team(l.subList(2,4)));
+    public void selectHero(String username, String hero) {
+        try {
+            message = "hero:" + hero;
+            out.println(message);
+            out.flush();
 
-                return m;
-            }
-            else {
-                return null;
-            }
+            response = in.readLine();
+
+            System.out.println(response);
         }
         catch (IOException e) {
             throw new RuntimeException(e);
