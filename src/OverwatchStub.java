@@ -5,14 +5,16 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-public class OverwatchStub {
+class OverwatchStub {
 
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
     private String message;
     private String response;
+
 
     OverwatchStub(String host, int port) throws IOException {
         socket = new Socket(host, port);
@@ -21,9 +23,10 @@ public class OverwatchStub {
         out = new PrintWriter(socket.getOutputStream(), true);
     }
 
-    public Player signup(String username, String password) throws InvalidAccountException {
+
+    Player signup(String username, String password) throws InvalidAccountException {
         try {
-            Player p = null;
+            Player p;
 
             message = "signup:" + username + ":" + password;
             out.println(message);
@@ -46,9 +49,10 @@ public class OverwatchStub {
         }
     }
 
-    public Player login(String username, String password) throws InvalidAccountException { // OK:ranking:victories
+
+    Player login(String username, String password) throws InvalidAccountException { // OK:ranking:victories
         try {
-            Player p = null;
+            Player p;
 
             message = "login:" + username + ":" + password;
             out.println(message);
@@ -71,7 +75,15 @@ public class OverwatchStub {
         }
     }
 
-    public Match play() {
+
+    void logout() {
+        message = "logout";
+        out.println(message);
+        out.flush();
+    }
+
+
+    void play() {
         try {
             message = "play";
             out.println(message);
@@ -80,30 +92,47 @@ public class OverwatchStub {
             response = in.readLine();
 
             System.out.println(response);
-
-            return null;
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void selectHero(String username, String hero) {
+
+    void selectHero() {
+        Random r = new Random();
+        boolean canSelect = true;
+
         try {
-            message = "hero:" + hero;
-            out.println(message);
-            out.flush();
+            while (true) {
+                int h = r.nextInt(26);
 
-            response = in.readLine();
+                Thread.sleep(2500);
 
-            System.out.println(response);
+                if (canSelect) {
+                    message = "hero:" + Overwatch.heroes[h];
+                    out.println(message);
+                    out.flush();
+                }
+
+                response = in.readLine();
+                System.out.println(response);
+
+                if (response.contains("START")) {
+                    canSelect = false;
+                }
+                else if (response.contains("VICTORY") || response.contains("DEFEAT")) {
+                    break;
+                }
+            }
         }
-        catch (IOException e) {
+        catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void closeSocket() throws IOException {
+
+    void closeSocket() throws IOException {
         socket.shutdownOutput();
     }
 }

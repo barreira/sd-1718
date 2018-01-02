@@ -4,28 +4,54 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Match {
+
+class Match {
 
     private Team team1;
     private Team team2;
-
+    private boolean closed;
     private final Lock locker;
 
-    public Match(Team team1, Team team2) {
+
+    Match(Team team1, Team team2) {
         this.team1 = team1;
         this.team2 = team2;
+        closed = false;
         locker = new ReentrantLock();
     }
 
-    public Team getTeam1() {
+
+    Team getTeam1() {
         return team1;
     }
 
-    public Team getTeam2() {
+
+    Team getTeam2() {
         return team2;
     }
 
-    public List<String> playersInMatch() {
+
+    void assignHeroes() {
+        this.assignHeroes(team1.getSelectedHeroes());
+        this.assignHeroes(team2.getSelectedHeroes());
+    }
+
+
+    private void assignHeroes(Map<String, String> team) {
+        for (String p : team.keySet()) {
+            if (team.get(p).equals("")) {
+                for (String hero : Overwatch.heroes) {
+                    if (!team.values().contains(hero)) {
+                        team.put(p, hero);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+
+    /*List<String> playersInMatch() {
         List<String> players = new ArrayList<>();
 
         players.addAll(team1.getPlayers());
@@ -34,15 +60,18 @@ public class Match {
         return players;
     }
 
-    public Map<String, String> selectedHeroes(int team) {
+
+    Map<String, String> selectedHeroes(int team) {
         return (team == 1) ? team1.getSelectedHeroes() : team2.getSelectedHeroes();
-    }
+    }*/
+
 
     private int playerTeam(String player) {
         return (team1.getPlayers().contains(player)) ? 1 : 2;
     }
 
-    public boolean selectHero(String player, String hero) {
+
+    boolean selectHero(String player, String hero) {
         locker.lock();
 
         try {
@@ -55,13 +84,26 @@ public class Match {
         }
     }
 
+
+    boolean isClosed() {
+        locker.lock();
+
+        try {
+            return closed;
+        } finally {
+            locker.unlock();
+        }
+    }
+
+
+    void setClosed() {
+        locker.lock();
+        this.closed = true;
+        locker.unlock();
+    }
+
+    @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append(team1.toString());
-        sb.append("|");
-        sb.append(team2.toString());
-
-        return sb.toString();
+        return team1.toString() + "|" + team2.toString();
     }
 }

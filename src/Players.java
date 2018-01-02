@@ -12,12 +12,13 @@ public class Players {
 
     private final Lock locker;
 
-    public Players() {
+    Players() {
         players = new HashMap<>();
         locker = new ReentrantLock();
     }
 
-    public Player signup(String username, String password) throws InvalidAccountException {
+
+    Player signup(String username, String password) throws InvalidAccountException {
         locker.lock();
 
         try {
@@ -38,7 +39,8 @@ public class Players {
         }
     }
 
-    public Player login(String username, String password) throws InvalidAccountException {
+
+    Player login(String username, String password) throws InvalidAccountException {
         locker.lock();
 
         try {
@@ -61,9 +63,37 @@ public class Players {
         }
     }
 
-    public void add(Player player) {
+    void add(Player player) {
         players.put(player.getUsername(), player);
     }
+
+
+    void addVictory(String username) {
+        locker.lock();
+
+        Player p = players.get(username);
+
+        if (p != null) {
+            p.addVictory();
+        }
+
+        locker.unlock();
+    }
+
+
+    void removeVictory(String username) {
+        locker.lock();
+
+        Player p = players.get(username);
+
+        if (p != null) {
+            p.removeVictory();
+        }
+
+        locker.unlock();
+    }
+
+
 
     public synchronized void saveObject(String file) throws IOException {
         ObjectOutputStream oout = new ObjectOutputStream(new FileOutputStream(file));

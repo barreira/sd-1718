@@ -4,7 +4,7 @@ import java.util.List;
 
 class PlayerQueue {
 
-    private final List<String> queue;
+    private final List<Player> queue;
 
 
     PlayerQueue() {
@@ -16,17 +16,19 @@ class PlayerQueue {
         return queue.size();
     }
 
-    void add(String p) {
+
+    void add(Player p) {
         queue.add(p);
     }
 
-    List<String> remove(int count) {
+
+    List<Player> remove(int count) {
         Iterator it = queue.iterator();
-        List<String> list = new ArrayList<>();
+        List<Player> list = new ArrayList<>();
         int i = 0;
 
         while (it.hasNext() && i < count) {
-            String p = (String)it.next();
+            Player p = (Player)it.next();
             list.add(p);
             it.remove();
             i++;
@@ -35,7 +37,16 @@ class PlayerQueue {
         return list;
     }
 
-    public void remove(String username) {
-        queue.remove(username);
+    void remove(String username) {
+        Iterator it = queue.iterator();
+
+        while (it.hasNext()) {
+            Player p = (Player)it.next();
+
+            if (p.getUsername().equals(username)) {
+                it.remove();
+                break;
+            }
+        }
     }
 }

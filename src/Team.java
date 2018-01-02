@@ -4,10 +4,11 @@ import java.util.Map;
 
 public class Team {
 
-    private List<String> players;
-    private static Map<String, String> selectedHeroes; // hero <-> player
+    private final List<String> players;
+    private final Map<String, String> selectedHeroes; // hero <-> player
 
-    public Team(List<String> players) {
+
+    Team(List<String> players) {
         this.players = players;
         selectedHeroes = new HashMap<>();
 
@@ -16,16 +17,18 @@ public class Team {
         }
     }
 
-    public List<String> getPlayers() {
+
+    List<String> getPlayers() {
         return players;
     }
 
-    public Map<String, String> getSelectedHeroes() {
+
+    Map<String, String> getSelectedHeroes() {
         return selectedHeroes;
     }
 
-    public boolean selectHero(String player, String hero) {
 
+    boolean selectHero(String player, String hero) {
         for (String p : selectedHeroes.values()) {
             if (p.equals(hero)) {
                 return false;
@@ -37,10 +40,13 @@ public class Team {
         return true;
     }
 
-    public String getPlayerHero(String player) {
-        return selectedHeroes.get(player);
-    }
 
+//    public String getPlayerHero(String player) {
+//        return selectedHeroes.get(player);
+//    }
+
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
@@ -49,7 +55,7 @@ public class Team {
 
             String hero = selectedHeroes.get(p);
 
-            if (hero != null) {
+            if (!hero.equals("")) {
                 sb.append(",");
                 sb.append(hero);
             }

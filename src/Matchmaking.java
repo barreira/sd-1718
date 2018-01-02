@@ -2,7 +2,7 @@
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
+
 
 class Matchmaking {
 
@@ -13,12 +13,16 @@ class Matchmaking {
 
     private final Map<Integer, PlayerQueue> availablePlayers;
     private Map<String, WaitingPlayer> waitingPlayers;
+    private final Players players;
+    private final Notifications notifications;
     private final ReentrantLock locker;
 
 
-    Matchmaking() {
+    Matchmaking(Players players, Notifications notifications) {
         availablePlayers = new HashMap<>();
         waitingPlayers = new HashMap<>();
+        this.players = players;
+        this.notifications = notifications;
         locker = new ReentrantLock();
 
         for (int i = 0; i <= 9; i++) {
@@ -31,14 +35,14 @@ class Matchmaking {
         PlayerQueue queue;
         PlayerQueue queueS;
         PlayerQueue queueI;
-        int limit = CENTRAL;
+        int limit;
         int rank = player.getRanking();
         String p = player.getUsername();
 
         locker.lock();
 
         try {
-            availablePlayers.get(rank).add(p);
+            availablePlayers.get(rank).add(player);
             queue = availablePlayers.get(rank);
             queueI = availablePlayers.get(rank - 1);
             queueS = availablePlayers.get(rank + 1);
@@ -68,7 +72,7 @@ class Matchmaking {
             // Chegando aqui é sinal que o último jogador fez com que uma match seja válida
             // Liberta-se o lock do matchMacking primeiro
 
-            List<String> playersInMatch = null;
+            List<Player> playersInMatch;
 
             if (limit == CENTRAL) {
                 playersInMatch = this.createMatch(queue, matches);
@@ -81,10 +85,10 @@ class Matchmaking {
             }
 
             // Acordar todos os jogadores que estão à espera
-            for (String s : playersInMatch) {
-                if (!s.equals(p)) {
-                    waitingPlayers.get(s).signal();
-                    waitingPlayers.remove(s);
+            for (Player s : playersInMatch) {
+                if (!s.getUsername().equals(p)) {
+                    waitingPlayers.get(s.getUsername()).signal();
+                    waitingPlayers.remove(s.getUsername());
                 }
             }
 
@@ -95,6 +99,7 @@ class Matchmaking {
             locker.unlock();
         }
     }
+
 
     private WaitingPlayer getWaitingPlayer(String p) {
         WaitingPlayer w = waitingPlayers.get(p);
@@ -107,29 +112,37 @@ class Matchmaking {
         return w;
     }
 
-    private List<String> createMatch(PlayerQueue queue, Matches matches) {
-        List<String> players = queue.remove(NUM_PLAYERS);
 
-        matches.addMatch(players);
+    private List<Player> createMatch(PlayerQueue queue, Matches matches) {
+        List<Player> players = queue.remove(NUM_PLAYERS);
+
+        int matchID = matches.addMatch(players);
+        Timer t = new Timer(matchID, matches);
+        t.start();
 
         return players;
     }
 
-    private List<String> createMatch(PlayerQueue queue1, PlayerQueue queue2, Matches matches) {
+
+    private List<Player> createMatch(PlayerQueue queue1, PlayerQueue queue2, Matches matches) {
         int s1 = queue1.size();
         int r = NUM_PLAYERS - s1;
 
-        List<String> players = new ArrayList<>();
+        List<Player> players = new ArrayList<>();
 
         players.addAll(queue1.remove(s1));
         players.addAll(queue2.remove(r));
 
-        matches.addMatch(players);
+        int matchID = matches.addMatch(players);
+
+        Timer t = new Timer(matchID, matches);
+        t.start();
 
         return players;
     }
 
-    public void clearPlayer(String username) {
+
+    void clearPlayer(String username) {
         locker.lock();
 
         for (PlayerQueue pq : availablePlayers.values()) {
@@ -156,6 +169,68 @@ class Matchmaking {
 
         void signal() {
             condition.signal();
+        }
+    }
+
+
+    private class Timer extends Thread {
+
+        private static final int TIME = 10000;
+
+        private int matchID;
+        private Matches matches;
+
+
+        Timer(int matchID, Matches matches) {
+            this.matchID = matchID;
+            this.matches = matches;
+        }
+
+
+        public void run() {
+            try {
+                Thread.sleep(TIME);
+                Match match = matches.getMatch(matchID);
+                Random r = new Random();
+                int winnerTeam = r.nextInt(2) + 1;
+
+                match.setClosed();
+                match.assignHeroes();
+
+                for (String p : match.getTeam1().getPlayers()) {
+                    notifications.notify(p, "START:" + match.toString());
+                }
+
+                for (String p : match.getTeam2().getPlayers()) {
+                    notifications.notify(p, "START:" + match.toString());
+                }
+
+                if (winnerTeam == 1) {
+                    for (String p : match.getTeam1().getPlayers()) {
+                        notifications.notify(p, p + ":VICTORY!");
+                        players.addVictory(p);
+                    }
+
+                    for (String p : match.getTeam2().getPlayers()) {
+                        notifications.notify(p, p + ":DEFEAT...");
+                        players.removeVictory(p);
+                    }
+                }
+                else {
+                    for (String p : match.getTeam2().getPlayers()) {
+                        notifications.notify(p, p + ":VICTORY!");
+                        players.addVictory(p);
+                    }
+
+                    for (String p : match.getTeam1().getPlayers()) {
+                        notifications.notify(p, p + ":DEFEAT...");
+                        players.removeVictory(p);
+                    }
+                }
+            }
+            catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

@@ -5,9 +5,9 @@ public interface Overwatch {
     public Match play(Player player) throws InterruptedException;
 
     public final int NUM_PLAYERS = 4;
-    public static final String[] heroes = {"Ana", "Bastion", "D.Va", "Doomfist", "Genji", "Hanzo", "Junkrat", "Lúcio",
-                                           "McCree", "Mei", "Mercy", "Orisa", "Pharah", "Reaper", "Reinhardt",
-                                           "Roadhog", "Soldier: 76", "Sombra", "Symmetra", "Torbjorn", "Tracer",
+    static final String[] heroes = {"Ana", "Bastion", "D.Va", "Doomfist", "Genji", "Hanzo", "Junkrat", "Lúcio",
+                                           "McCree", "Mei", "Mercy", "Moira", "Orisa", "Pharah", "Reaper", "Reinhardt",
+                                           "Roadhog", "Soldier 76", "Sombra", "Symmetra", "Torbjorn", "Tracer",
                                            "Widowmaker", "Winston", "Zarya", "Zenyatta"};
 
     // public void selectHero(String hero);
