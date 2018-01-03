@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public class Server {
 
-    //private static final String FILE = "overwatch.dat";
+//    private static final String FILE = "overwatch.dat";
 
     public static void main(String[] args) throws IOException {
 
@@ -13,7 +13,6 @@ public class Server {
 
         Player player = new Player();
         Players players = Server.initApp();
-//        Players players = new Players();
         Notifications notifications = new Notifications();
         Matchmaking matchmaking = new Matchmaking(players, notifications);
         Matches matches = new Matches();

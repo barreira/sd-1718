@@ -16,7 +16,6 @@ class OverwatchThread extends Thread {
     private Matches matches;
     private Notifications notifications;
     //private String fileName;
-//    private Connections connections;
 
 
     OverwatchThread(Socket socket, Player player, Players players, Matchmaking matchmaking, Matches matches,
@@ -60,9 +59,7 @@ class OverwatchThread extends Thread {
 
                         case "play":
                             match = play();
-
                             response = "OK:" + match.toString();
-
                             break;
 
                         case "hero":
