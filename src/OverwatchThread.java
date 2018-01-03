@@ -8,6 +8,18 @@ import java.util.List;
 
 class OverwatchThread extends Thread {
 
+    private static final String OK = "OK";
+    private static final String DELIMITER = ":";
+    private static final String ERROR = "ERROR";
+    private static final String MATCH = "MATCH";
+    private static final String ABORTED = "ABORTED";
+    private static final String SIGNUP = "signup";
+    private static final String LOGIN = "login";
+    private static final String LOGOUT = "logout";
+    private static final String PLAY = "play";
+    private static final String HERO = "hero";
+
+
     private Socket socket;
     private Player player;
     private Match match;
@@ -40,41 +52,46 @@ class OverwatchThread extends Thread {
             String response = null;
 
             while ((line = in.readLine()) != null) {
-                String[] parts = line.split(":");
+                String[] parts = line.split(DELIMITER);
 
                 try {
                     switch (parts[0]) {
-                        case "signup":
+                        case SIGNUP:
                             player = signup(parts[1], parts[2]);
                             notifications.addClient(player.getUsername(), out);
-                            response = "OK";
+                            response = OK;
+
                             break;
 
-                        case "login":
+                        case LOGIN:
                             player = login(parts[1], parts[2]);
                             notifications.addClient(player.getUsername(), out);
-                            response = "OK:" + player.getRanking() + ":" + player.getVictories();
+                            response = OK + DELIMITER + player.getRanking() + DELIMITER + player.getVictories();
+
                             break;
 
-                        case "logout":
+                        case LOGOUT:
                             this.logout();
                             break;
 
-                        case "play":
-                            matchThread = new MatchThread();
-                            matchThread.start();
+                        case PLAY:
+                            if (matchThread == null) {
+                                matchThread = new MatchThread();
+                                matchThread.start();
+                            }
+
                             break;
 
-                        case "hero":
+                        case HERO:
                             if (match != null) {
                                 if (!match.isClosed()) {
                                     boolean success = match.selectHero(player.getUsername(), parts[1]);
 
                                     if (success) {
-                                        response = "OK:" + player.getUsername() + ":" + parts[1];
+                                        response = OK + DELIMITER + player.getUsername() + DELIMITER + parts[1];
                                     }
                                     else {
-                                        response = "ERROR:" + player.getUsername() + ":" + parts[1];
+                                        response = ERROR + DELIMITER + player.getUsername() + DELIMITER + parts[1];
                                     }
                                 }
                                 else {
@@ -88,7 +105,7 @@ class OverwatchThread extends Thread {
                     }
                 }
                 catch (InvalidAccountException e) {
-                    response = "ERROR";
+                    response = ERROR;
                 }
 
                 if (response != null) {
@@ -133,11 +150,11 @@ class OverwatchThread extends Thread {
             List<String> t2 = match.getTeam2().getPlayers();
 
             for (String p : t1) {
-                notifications.notify(p, "ABORTED:" + p);
+                notifications.notify(p, ABORTED + DELIMITER + p);
             }
 
             for (String p : t2) {
-                notifications.notify(p, "ABORTED:" + p);
+                notifications.notify(p, ABORTED + DELIMITER + p);
             }
 
             matchmaking.abortMatch(match.getID());
@@ -157,7 +174,7 @@ class OverwatchThread extends Thread {
                 int matchID = matchmaking.addPlayer(player, matches);
 
                 match = matches.getMatch(matchID);
-                notifications.notify(player.getUsername(), "MATCH:" + match.toString());
+                notifications.notify(player.getUsername(), MATCH + DELIMITER + match.toString());
             }
             catch (InterruptedException e) {
                 // Nada a fazer

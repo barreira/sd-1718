@@ -3,11 +3,24 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
+
 class OverwatchStub {
+
+    private static final String OK = "OK";
+    private static final String DELIMITER = ":";
+    private static final String MATCH = "MATCH";
+    private static final String ABORTED = "ABORTED";
+    private static final String SIGNUP = "signup";
+    private static final String LOGIN = "login";
+    private static final String LOGOUT = "logout";
+    private static final String PLAY = "play";
+    private static final String HERO = "hero";
+    private static final String START = "START";
+    private static final String VICTORY = "VICTORY!";
+    private static final String DEFEAT = "DEFEAT...";
+
 
     private Socket socket;
     private BufferedReader in;
@@ -28,14 +41,14 @@ class OverwatchStub {
         try {
             Player p;
 
-            message = "signup:" + username + ":" + password;
+            message = SIGNUP + DELIMITER + username + DELIMITER + password;
             out.println(message);
             out.flush();
 
             response = in.readLine();
             //System.out.println(response);
 
-            if (response.equals("OK")) {
+            if (response.equals(OK)) {
                 p = new Player(username, password);
             }
             else {
@@ -54,14 +67,14 @@ class OverwatchStub {
         try {
             Player p;
 
-            message = "login:" + username + ":" + password;
+            message = LOGIN + DELIMITER + username + DELIMITER + password;
             out.println(message);
             out.flush();
 
             response = in.readLine();
-            String[] parts = response.split(":");
+            String[] parts = response.split(DELIMITER);
 
-            if (parts[0].equals("OK")) {
+            if (parts[0].equals(OK)) {
                 p = new Player(username, password, Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
             }
             else {
@@ -77,7 +90,7 @@ class OverwatchStub {
 
 
     void logout() {
-        message = "logout";
+        message = LOGOUT;
         out.println(message);
         out.flush();
     }
@@ -85,13 +98,13 @@ class OverwatchStub {
 
     String play() {
         try {
-            message = "play";
+            message = PLAY;
             out.println(message);
             out.flush();
 
             response = in.readLine();
 
-            if (response.contains("MATCH")) {
+            if (response.contains(MATCH)) {
                 System.out.println(response);
                 //return this.selectHero();
             }
@@ -115,7 +128,7 @@ class OverwatchStub {
                 Thread.sleep(2500);
 
                 if (canSelect) {
-                    message = "hero:" + Overwatch.heroes[h];
+                    message = HERO + DELIMITER + Overwatch.heroes[h];
                     out.println(message);
                     out.flush();
                 }
@@ -123,13 +136,13 @@ class OverwatchStub {
                 response = in.readLine();
                 System.out.println(response);
 
-                if (response.contains("START")) {
+                if (response.contains(START)) {
                     canSelect = false;
                 }
-                else if (response.contains("VICTORY") || response.contains("DEFEAT")) {
+                else if (response.contains(VICTORY) || response.contains(DEFEAT)) {
                     break;
                 }
-                else if (response.contains("ABORTED")) {
+                else if (response.contains(ABORTED)) {
                     break;
                 }
             }

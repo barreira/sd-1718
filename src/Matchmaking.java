@@ -8,6 +8,10 @@ class Matchmaking {
     private static final int CENTRAL_INFERIOR = 0;
     private static final int CENTRAL = 1;
     private static final int CENTRAL_SUPERIOR = 2;
+    private static final String DELIMITER = ":";
+    private static final String START = "START";
+    private static final String VICTORY = "VICTORY!";
+    private static final String DEFEAT = "DEFEAT...";
 
     private final Map<Integer, PlayerQueue> availablePlayers;
     private Map<String, WaitingPlayer> waitingPlayers;
@@ -210,14 +214,14 @@ class Matchmaking {
 
         private void notitfyMatchAndResult(Match match, int team, List<String> teamPlayers, int winnerTeam) {
             for (String p : teamPlayers) {
-                notifications.notify(p, "START:" + match.toString());
+                notifications.notify(p, START + DELIMITER + match.toString());
 
                 if (team == winnerTeam) {
-                    notifications.notify(p, p + ":VICTORY!");
+                    notifications.notify(p, p + DELIMITER + VICTORY);
                     players.addVictory(p);
                 }
                 else {
-                    notifications.notify(p, p + ":DEFEAT...");
+                    notifications.notify(p, p + DELIMITER + DEFEAT);
                     players.removeVictory(p);
                 }
             }
