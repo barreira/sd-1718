@@ -200,7 +200,7 @@ class Matchmaking {
 
     private class Timer extends Thread {
 
-        private static final int TIME = 10000;
+        private static final int TIME = 30000;
 
         private int matchID;
         private Matches matches;

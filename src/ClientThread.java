@@ -3,8 +3,8 @@ import java.io.IOException;
 
 class ClientThread extends Thread {
 
-    private String username;
-    private String password;
+    private final String username;
+    private final String password;
 
 
     ClientThread(String username, String password) {
@@ -13,6 +13,7 @@ class ClientThread extends Thread {
     }
 
 
+    @Override
     public void run() {
         try {
             String response;

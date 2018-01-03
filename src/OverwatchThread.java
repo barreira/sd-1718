@@ -9,6 +9,7 @@ import java.util.List;
 class OverwatchThread extends Thread {
 
     private static final String OK = "OK";
+    private static final String GET = "get";
     private static final String DELIMITER = ":";
     private static final String ERROR = "ERROR";
     private static final String MATCH = "MATCH";
@@ -74,6 +75,10 @@ class OverwatchThread extends Thread {
                             this.logout();
                             break;
 
+                        case GET:
+                            response = OK + DELIMITER + player.getRanking() + DELIMITER + player.getVictories();
+                            break;
+                            
                         case PLAY:
                             if (matchThread == null) {
                                 matchThread = new MatchThread();
@@ -88,7 +93,7 @@ class OverwatchThread extends Thread {
                                     boolean success = match.selectHero(player.getUsername(), parts[1]);
 
                                     if (success) {
-                                        response = OK + DELIMITER + player.getUsername() + DELIMITER + parts[1];
+                                        notifyMatch(OK + DELIMITER + player.getUsername() + DELIMITER + parts[1]);
                                     }
                                     else {
                                         response = ERROR + DELIMITER + player.getUsername() + DELIMITER + parts[1];
@@ -138,6 +143,20 @@ class OverwatchThread extends Thread {
         this.clear();
     }
 
+    
+    private void notifyMatch(String message) {
+        List<String> t1 = match.getTeam1().getPlayers();
+        List<String> t2 = match.getTeam2().getPlayers();
+
+        for (String p : t1) {
+            notifications.notify(p, message);
+        }
+
+        for (String p : t2) {
+            notifications.notify(p, message);
+        }
+    } 
+    
 
     private void clear() {
         if (matchThread != null) {

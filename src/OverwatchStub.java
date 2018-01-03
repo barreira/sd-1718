@@ -3,10 +3,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Observable;
 import java.util.Random;
 
 
-class OverwatchStub {
+public class OverwatchStub extends Observable {
 
     private static final String OK = "OK";
     private static final String DELIMITER = ":";
@@ -21,7 +22,6 @@ class OverwatchStub {
     private static final String VICTORY = "VICTORY!";
     private static final String DEFEAT = "DEFEAT...";
 
-
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
@@ -31,12 +31,17 @@ class OverwatchStub {
 
     OverwatchStub(String host, int port) throws IOException {
         socket = new Socket(host, port);
-
+        
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
     }
 
 
+    String getResponse() {
+        return response;
+    }
+
+    
     Player signup(String username, String password) throws InvalidAccountException {
         try {
             Player p;
@@ -62,6 +67,27 @@ class OverwatchStub {
         }
     }
 
+    
+    Player get(String username, String password) {
+        try {
+            Player p;
+            
+            message = "get:" + username;
+            out.println(message);
+            out.flush();
+            
+            response = in.readLine();
+            String[] parts = response.split(DELIMITER);
+
+            p = new Player(username, password, Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+            
+            return p;
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
 
     Player login(String username, String password) throws InvalidAccountException { // OK:ranking:victories
         try {
@@ -94,8 +120,31 @@ class OverwatchStub {
         out.println(message);
         out.flush();
     }
+    
 
-
+    void listen() {
+        try {
+            while (true) {
+                response = in.readLine();
+            
+                this.setChanged();
+                this.notifyObservers();
+            
+               
+                if (response.contains(VICTORY) || response.contains(DEFEAT)) {
+                    break;
+                }
+                else if (response.contains(ABORTED)) {
+                    break;
+                }
+            }
+        } 
+        catch (IOException e) {
+            
+        }
+    }
+    
+    
     String play() {
         try {
             message = PLAY;
@@ -105,8 +154,8 @@ class OverwatchStub {
             response = in.readLine();
 
             if (response.contains(MATCH)) {
-                System.out.println(response);
-                //return this.selectHero();
+                this.setChanged();
+                this.notifyObservers();
             }
         }
         catch (IOException e) {
@@ -116,6 +165,12 @@ class OverwatchStub {
         return response;
     }
 
+    
+    void selectHero(String hero) {
+        message = HERO + DELIMITER + hero;
+        out.println(message);
+        out.flush();
+    }
 
     String selectHero() {
         Random r = new Random();
@@ -125,7 +180,7 @@ class OverwatchStub {
             while (true) {
                 int h = r.nextInt(26);
 
-                Thread.sleep(2500);
+                Thread.sleep(5000);
 
                 if (canSelect) {
                     message = HERO + DELIMITER + Overwatch.heroes[h];
