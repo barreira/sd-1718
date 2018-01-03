@@ -28,11 +28,18 @@ class Notifications {
 
         PrintWriter pw = clients.get(username);
 
+        locker.unlock();
+
         if (pw != null) {
             pw.println(message);
             pw.flush();
         }
+    }
 
+
+    void remove(String username) {
+        locker.lock();
+        clients.remove(username);
         locker.unlock();
     }
 }

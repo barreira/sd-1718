@@ -15,10 +15,15 @@ class ClientThread extends Thread {
 
     public void run() {
         try {
+            String response;
             OverwatchStub overwatch = new OverwatchStub("localhost", 2222);
 
             overwatch.login(username, password);
-            overwatch.play();
+
+            //do {
+                response = overwatch.play();
+            //} while (!response.contains("DEFEAT") && !response.contains("VICTORY"));
+
             overwatch.selectHero();
             overwatch.logout();
             overwatch.closeSocket();

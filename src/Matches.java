@@ -126,7 +126,7 @@ class Matches {
         locker.lock();
 
         try {
-            matches.put(nextID, new Match(new Team(t1), new Team(t2)));
+            matches.put(nextID, new Match(nextID, new Team(t1), new Team(t2)));
             return nextID++;
         }
         finally {
@@ -157,10 +157,10 @@ class Matches {
     }
 
 
-    void clearMatch(String username) {
+    void clearMatch(int matchID) {
         locker.lock();
 
-        matches.remove(getMatchID(username));
+        matches.remove(matchID);
 
         locker.unlock();
     }

@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -7,17 +5,24 @@ import java.util.concurrent.locks.ReentrantLock;
 
 class Match {
 
+    private int id;
     private Team team1;
     private Team team2;
     private boolean closed;
     private final Lock locker;
 
 
-    Match(Team team1, Team team2) {
+    Match(int id, Team team1, Team team2) {
+        this.id = id;
         this.team1 = team1;
         this.team2 = team2;
         closed = false;
         locker = new ReentrantLock();
+    }
+
+
+    int getID() {
+        return id;
     }
 
 

@@ -1,4 +1,3 @@
-
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -6,7 +5,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 class Matchmaking {
 
-    private static final int NUM_PLAYERS = 4;
     private static final int CENTRAL_INFERIOR = 0;
     private static final int CENTRAL = 1;
     private static final int CENTRAL_SUPERIOR = 2;
@@ -16,6 +14,7 @@ class Matchmaking {
     private final Players players;
     private final Notifications notifications;
     private final ReentrantLock locker;
+    private final Map<Integer, Timer> matchThreads;
 
 
     Matchmaking(Players players, Notifications notifications) {
@@ -24,6 +23,7 @@ class Matchmaking {
         this.players = players;
         this.notifications = notifications;
         locker = new ReentrantLock();
+        this.matchThreads = new HashMap<>();
 
         for (int i = 0; i <= 9; i++) {
             availablePlayers.put(i, new PlayerQueue());
@@ -49,17 +49,17 @@ class Matchmaking {
 
             // adquirir os locks das queues necessários e libertar o lock do map
 
-            if (queue.size() >= NUM_PLAYERS) {
+            if (queue.size() >= Overwatch.NUM_PLAYERS) {
                 limit = CENTRAL;
             }
-            else if (queueI != null && (queueI.size() + queue.size() >= NUM_PLAYERS)) {
+            else if (queueI != null && (queueI.size() + queue.size() >= Overwatch.NUM_PLAYERS)) {
                 limit = CENTRAL_INFERIOR;
             }
-            else if (queueS != null && (queueS.size() + queue.size() >= NUM_PLAYERS)) {
+            else if (queueS != null && (queueS.size() + queue.size() >= Overwatch.NUM_PLAYERS)) {
                 limit = CENTRAL_SUPERIOR;
             }
             else {
-                // Neste caso liberta-se o lock do matchmakin
+                // Neste caso liberta-se o lock do matchmaking
 
                 // o jogador tem que esperar
                 WaitingPlayer w = this.getWaitingPlayer(p);
@@ -87,8 +87,12 @@ class Matchmaking {
             // Acordar todos os jogadores que estão à espera
             for (Player s : playersInMatch) {
                 if (!s.getUsername().equals(p)) {
-                    waitingPlayers.get(s.getUsername()).signal();
-                    waitingPlayers.remove(s.getUsername());
+                    WaitingPlayer w = waitingPlayers.get(s.getUsername());
+
+                    if (w != null) {
+                        w.signal();
+                        waitingPlayers.remove(s.getUsername());
+                    }
                 }
             }
 
@@ -114,11 +118,13 @@ class Matchmaking {
 
 
     private List<Player> createMatch(PlayerQueue queue, Matches matches) {
-        List<Player> players = queue.remove(NUM_PLAYERS);
+        List<Player> players = queue.remove(Overwatch.NUM_PLAYERS);
 
         int matchID = matches.addMatch(players);
         Timer t = new Timer(matchID, matches);
         t.start();
+
+        matchThreads.put(matchID, t);
 
         return players;
     }
@@ -126,7 +132,7 @@ class Matchmaking {
 
     private List<Player> createMatch(PlayerQueue queue1, PlayerQueue queue2, Matches matches) {
         int s1 = queue1.size();
-        int r = NUM_PLAYERS - s1;
+        int r = Overwatch.NUM_PLAYERS - s1;
 
         List<Player> players = new ArrayList<>();
 
@@ -137,6 +143,8 @@ class Matchmaking {
 
         Timer t = new Timer(matchID, matches);
         t.start();
+
+        matchThreads.put(matchID, t);
 
         return players;
     }
@@ -149,6 +157,19 @@ class Matchmaking {
             pq.remove(username);
         }
         waitingPlayers.remove(username);
+
+        locker.unlock();
+    }
+
+
+    void abortMatch(int matchID) {
+        locker.lock();
+
+        Timer t = matchThreads.get(matchID);
+
+        if (t != null) {
+            t.interrupt();
+        }
 
         locker.unlock();
     }
@@ -187,6 +208,22 @@ class Matchmaking {
         }
 
 
+        private void notitfyMatchAndResult(Match match, int team, List<String> teamPlayers, int winnerTeam) {
+            for (String p : teamPlayers) {
+                notifications.notify(p, "START:" + match.toString());
+
+                if (team == winnerTeam) {
+                    notifications.notify(p, p + ":VICTORY!");
+                    players.addVictory(p);
+                }
+                else {
+                    notifications.notify(p, p + ":DEFEAT...");
+                    players.removeVictory(p);
+                }
+            }
+        }
+
+
         public void run() {
             try {
                 Thread.sleep(TIME);
@@ -197,39 +234,16 @@ class Matchmaking {
                 match.setClosed();
                 match.assignHeroes();
 
-                for (String p : match.getTeam1().getPlayers()) {
-                    notifications.notify(p, "START:" + match.toString());
-                }
+                this.notitfyMatchAndResult(match, 1, match.getTeam1().getPlayers(), winnerTeam);
+                this.notitfyMatchAndResult(match, 2, match.getTeam2().getPlayers(), winnerTeam);
 
-                for (String p : match.getTeam2().getPlayers()) {
-                    notifications.notify(p, "START:" + match.toString());
-                }
-
-                if (winnerTeam == 1) {
-                    for (String p : match.getTeam1().getPlayers()) {
-                        notifications.notify(p, p + ":VICTORY!");
-                        players.addVictory(p);
-                    }
-
-                    for (String p : match.getTeam2().getPlayers()) {
-                        notifications.notify(p, p + ":DEFEAT...");
-                        players.removeVictory(p);
-                    }
-                }
-                else {
-                    for (String p : match.getTeam2().getPlayers()) {
-                        notifications.notify(p, p + ":VICTORY!");
-                        players.addVictory(p);
-                    }
-
-                    for (String p : match.getTeam1().getPlayers()) {
-                        notifications.notify(p, p + ":DEFEAT...");
-                        players.removeVictory(p);
-                    }
-                }
+                matches.clearMatch(matchID);
+                matchThreads.remove(matchID);
             }
             catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                matches.getMatch(matchID).setClosed();
+                matchThreads.remove(matchID);
+                matches.clearMatch(matchID);
             }
         }
     }

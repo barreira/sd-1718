@@ -83,7 +83,7 @@ class OverwatchStub {
     }
 
 
-    void play() {
+    String play() {
         try {
             message = "play";
             out.println(message);
@@ -91,15 +91,20 @@ class OverwatchStub {
 
             response = in.readLine();
 
-            System.out.println(response);
+            if (response.contains("MATCH")) {
+                System.out.println(response);
+                //return this.selectHero();
+            }
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        return response;
     }
 
 
-    void selectHero() {
+    String selectHero() {
         Random r = new Random();
         boolean canSelect = true;
 
@@ -124,11 +129,16 @@ class OverwatchStub {
                 else if (response.contains("VICTORY") || response.contains("DEFEAT")) {
                     break;
                 }
+                else if (response.contains("ABORTED")) {
+                    break;
+                }
             }
         }
         catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+
+        return response;
     }
 
 
